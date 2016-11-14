@@ -1,4 +1,16 @@
-commit a8ec5029ae1150ece366f134f0240e29f25c8971 (HEAD, origin/master, origin/HEAD, master)
+commit e7bcf46971a773975809bcfe39a4de2bc82b9611 (HEAD, origin/master, origin/HEAD, master)
+Author: jose perez <sinfallas@gmail.com>
+Date:   Mon Nov 14 13:07:15 2016 -0400
+
+    * se terminan de crear las funciones, falta agregar el nuevo codigo
+
+commit 361cf441e0198088ec9f997f34af06df52231fec
+Author: jose perez <sinfallas@gmail.com>
+Date:   Mon Nov 14 12:59:24 2016 -0400
+
+    * changelog
+
+commit a8ec5029ae1150ece366f134f0240e29f25c8971
 Author: jose perez <sinfallas@gmail.com>
 Date:   Mon Nov 14 12:58:51 2016 -0400
 
