@@ -1,10 +1,22 @@
-commit 2e62b6249ca3fbb548546d82a05b48bc694a77d5 (HEAD, origin/master, origin/HEAD, master)
+commit a8ec5029ae1150ece366f134f0240e29f25c8971 (HEAD, origin/master, origin/HEAD, master)
+Author: jose perez <sinfallas@gmail.com>
+Date:   Mon Nov 14 12:58:51 2016 -0400
+
+    * se empieza a organizar el codigo en funciones para hacerlo mas facil de comprender
+
+commit 641c49eb0d90388df3ef2ce943ca17959dac0fcb
+Author: jose perez <sinfallas@gmail.com>
+Date:   Sun Apr 17 21:19:57 2016 -0430
+
+    * changelog
+
+commit 2e62b6249ca3fbb548546d82a05b48bc694a77d5
 Author: jose perez <sinfallas@gmail.com>
 Date:   Sun Apr 17 21:19:39 2016 -0430
 
     * zenodo
 
-commit 3efe4cfda725ee5e1e8af26cbb06e5dede4d0c89
+commit 3efe4cfda725ee5e1e8af26cbb06e5dede4d0c89 (tag: v0.1.1)
 Author: jose perez <sinfallas@gmail.com>
 Date:   Sat Apr 9 11:39:15 2016 -0430
 
