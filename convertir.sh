@@ -8,6 +8,7 @@ if [[ "$EUID" != "0" ]]; then
 fi
 trap "rm -f /run/$(basename $0).pid; exit" 0 1 2 3 15
 echo "$BASHPID" > /run/$(basename $0).pid
+memoria=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
 
 function limpieza_1 (){
 	history -c
@@ -167,59 +168,56 @@ function servicios_1 (){
 	systemctl enable systemd-readahead-collect systemd-readahead-replay
 }
 
-sed -i 's_xanadu_'$(cat /etc/hostname)'_g' /etc/hosts
-sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT="acpi_osi=Linux swapaccount=1 numa=on apic lapic cgroup_enable=memory security=apparmor apparmor=1 swapaccount=1 panic=10 quiet"/g' /etc/default/grub
-chmod 600 /etc/sudoers
-update-grub2
+function terminando_1 (){
+	sed -i 's_xanadu_'$(cat /etc/hostname)'_g' /etc/hosts
+	sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT="acpi_osi=Linux swapaccount=1 numa=on apic lapic cgroup_enable=memory security=apparmor apparmor=1 swapaccount=1 panic=10 quiet"/g' /etc/default/grub
+	chmod 600 /etc/sudoers
+	iucode_tool --scan-system
+	update-initramfs -u
+	chage -M 365 root
+	hardlink -f -x /sys -t -o /
+	prelink -amR
+	sed -i 's_autologin-user=user_#autologin-user=user_g' /etc/lightdm/lightdm.conf
+	sed -i 's_autologin-user-timeout=0_#autologin-user-timeout=0_g' /etc/lightdm/lightdm.conf
+	sed -i 's_#greeter-hide-users=false_greeter-hide-users=false_g' /etc/lightdm/lightdm.conf
+	sed -i 's_#session-cleanup-script=_session-cleanup-script=/usr/bin/fin_g' /etc/lightdm/lightdm.conf
+	sed -i 's_show-indicators=~language;~session;~power_show-indicators=~session;~power_g' /etc/lightdm/lightdm-gtk-greeter.conf
+	sed -i 's_#show-clock=_show-clock=true_g' /etc/lightdm/lightdm-gtk-greeter.conf
+	sed -i 's_#clock-format=_clock-format=%a, %d %b %I:%M_g' /etc/lightdm/lightdm-gtk-greeter.conf
+	sed -i 's_umask 022_umask 027_g' /etc/init.d/rc
+	sed -i 's_umask 022_umask 027_g' /etc/login.defs
+	sed -i 's_/bin/bash_/usr/bin/fish_g' /etc/passwd
+	sed -i 's_service anacron stop_#service anacron stop_g' /etc/rc.local
+	sed -i 's_service cron stop_#service cron stop_g' /etc/rc.local
+	echo "default-user-image=/usr/share/images/desktop-base/logo.png" >> /etc/lightdm/lightdm-gtk-greeter.conf
+	echo "user ALL=(ALL) ALL" > /etc/sudoers.d/live
+	echo "umask 027" >> /etc/profile
+	echo "auth required pam_succeed_if.so user != root quiet" >> /etc/pam.d/lightdm
+	if [ -n "$(lspci | grep -E 'VGA|Display' | head -n1 | cut -d ':' -f3 | grep -F 'Intel')" ]; then
+		echo 'Section "Device"' > /etc/X11/xorg.conf
+		echo ' Identifier "intel"' >> /etc/X11/xorg.conf
+		echo ' Driver "intel"' >> /etc/X11/xorg.conf
+		echo ' BusID  "PCI:0:2:0"' >> /etc/X11/xorg.conf
+		echo ' Option "AccelMethod" "SNA"' >> /etc/X11/xorg.conf
+		echo ' Option "SwapbuffersWait" "false"' >> /etc/X11/xorg.conf
+		echo ' Option "Tiling" "true"' >> /etc/X11/xorg.conf
+		echo ' Option "BackingStore" "True"' >> /etc/X11/xorg.conf
+		echo ' Option "XvMC" "on"' >> /etc/X11/xorg.conf
+		echo ' Option "TripleBuffer" "true"' >> /etc/X11/xorg.conf
+		echo ' Option "DRI" "true"' >> /etc/X11/xorg.conf
+		echo 'EndSection' >> /etc/X11/xorg.conf
+	fi
+	if (( $memoria > 4096000 )); then
+		echo "tmpfs /var/cache/apt/archives tmpfs noatime,sync,nodev 0 0" >> /etc/fstab
+	fi
+	update-grub2
+}
 
-iucode_tool --scan-system
-update-initramfs -u
-chage -M 365 root
-
-
-hardlink -f -x /sys -t -o /
-prelink -amR
-
-# source /usr/bin/variables
-sed -i 's_autologin-user=user_#autologin-user=user_g' /etc/lightdm/lightdm.conf
-sed -i 's_autologin-user-timeout=0_#autologin-user-timeout=0_g' /etc/lightdm/lightdm.conf
-sed -i 's_#greeter-hide-users=false_greeter-hide-users=false_g' /etc/lightdm/lightdm.conf
-sed -i 's_#session-cleanup-script=_session-cleanup-script=/usr/bin/fin_g' /etc/lightdm/lightdm.conf
-sed -i 's_show-indicators=~language;~session;~power_show-indicators=~session;~power_g' /etc/lightdm/lightdm-gtk-greeter.conf
-sed -i 's_#show-clock=_show-clock=true_g' /etc/lightdm/lightdm-gtk-greeter.conf
-sed -i 's_#clock-format=_clock-format=%a, %d %b %I:%M_g' /etc/lightdm/lightdm-gtk-greeter.conf
-sed -i 's_umask 022_umask 027_g' /etc/init.d/rc
-sed -i 's_umask 022_umask 027_g' /etc/login.defs
-sed -i 's_/bin/bash_/usr/bin/fish_g' /etc/passwd
-sed -i 's_service anacron stop_#service anacron stop_g' /etc/rc.local
-sed -i 's_service cron stop_#service cron stop_g' /etc/rc.local
-echo "default-user-image=/usr/share/images/desktop-base/logo.png" >> /etc/lightdm/lightdm-gtk-greeter.conf
-echo "user ALL=(ALL) ALL" > /etc/sudoers.d/live
-echo "umask 027" >> /etc/profile
-echo "auth required pam_succeed_if.so user != root quiet" >> /etc/pam.d/lightdm
-if [ -n "$(lspci | grep -E 'VGA|Display' | head -n1 | cut -d ':' -f3 | grep -F 'Intel')" ]; then
-	echo 'Section "Device"' > /etc/X11/xorg.conf
-	echo ' Identifier "intel"' >> /etc/X11/xorg.conf
-	echo ' Driver "intel"' >> /etc/X11/xorg.conf
-	echo ' BusID  "PCI:0:2:0"' >> /etc/X11/xorg.conf
-	echo ' Option "AccelMethod" "SNA"' >> /etc/X11/xorg.conf
-	echo ' Option "SwapbuffersWait" "false"' >> /etc/X11/xorg.conf
-	echo ' Option "Tiling" "true"' >> /etc/X11/xorg.conf
-	echo ' Option "BackingStore" "True"' >> /etc/X11/xorg.conf
-	echo ' Option "XvMC" "on"' >> /etc/X11/xorg.conf
-	echo ' Option "TripleBuffer" "true"' >> /etc/X11/xorg.conf
-	echo ' Option "DRI" "true"' >> /etc/X11/xorg.conf
-	echo 'EndSection' >> /etc/X11/xorg.conf
-fi
-if (( $memoria > 4096000 )); then
-	echo "tmpfs /var/cache/apt/archives tmpfs noatime,sync,nodev 0 0" >> /etc/fstab
-fi
-chmod 600 /etc/sudoers
-update-grub2
-
-iucode_tool --scan-system
-update-initramfs -u
-chage -M 365 root
+limpieza_1
+preparar_1
+instalar_1
+servicios_1
+terminando_1
 
 rm -f /run/$(basename $0).pid
 exit 0
